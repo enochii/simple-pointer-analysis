@@ -66,9 +66,9 @@ char EnableFunctionOptPass::ID=0;
 cl::opt<bool> DumpModuleInfo("dump-module",
                                  cl::desc("Dump Module info into stderr"),
                                  cl::init(false), cl::Hidden);
-// cl::opt<bool> DumpDebugInfo("dbg",
-//                                  cl::desc("Dump debug info into out"),
-//                                  cl::init(false), cl::Hidden);
+cl::opt<bool> DumpDebugInfo("debug-info",
+                                 cl::desc("Dump debug info into out"),
+                                 cl::init(false), cl::Hidden);
 cl::opt<bool> DumpTrace("trace",
                                  cl::desc("Dump trace into err"),
                                  cl::init(false), cl::Hidden);
@@ -132,8 +132,6 @@ private:
   }
 
   void collectConstraintsForInstruction(const Instruction* inst) {
-    if(inst->getType()->isPointerTy()) return;
-
     if(DumpInst) inst->dump();
     switch (inst->getOpcode())
     {
@@ -141,7 +139,7 @@ private:
         assert(inst->getType()->isPointerTy());
         NodeIdx src = nodeFactory.createObjNode(inst);
         NodeIdx dest = nodeFactory.getValNode(inst);
-        constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+        constraints.emplace_back(dest, src, AndersonConstraint::AddressOf);
         break;
       }
       case Instruction::Load:
@@ -153,19 +151,30 @@ private:
         break;
       
       case Instruction::Store:
+        // type of store instruction is "void"
         if(inst->getOperand(0)->getType()->isPointerTy()) {
           NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
           NodeIdx dest = nodeFactory.getValNode(inst->getOperand(1));
           constraints.emplace_back(dest, src, AndersonConstraint::Store);
         }
         break;
-      
+      case Instruction::PHI: 
+        if(inst->getType()->isPointerTy()) {
+          const PHINode *phiNode = cast<PHINode>(inst);
+          NodeIdx dest = nodeFactory.getValNode(inst);
+          for(unsigned i=0; i<phiNode->getNumIncomingValues(); i++) {
+            NodeIdx src = nodeFactory.getValNode(phiNode->getIncomingValue(i));
+            constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+          }
+        }
+        break;
       default:
         break;
     }
   }
 
   void dumpConstraints() {
+    llvm::errs() << "Constraints " << constraints.size() << "\n";
     for(auto &item: constraints) {
       auto srcStr = idx2str(item.getSrc());
       auto destStr = idx2str(item.getDest());
