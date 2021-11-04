@@ -4,6 +4,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 using namespace llvm;
 using namespace std;
@@ -13,7 +14,8 @@ typedef unsigned NodeIdx;
 class AndersonNode {
 public:
 	enum NodeType {
-		ValueNode, ObjectNode, 
+		ValueNode,  // kind of like pointer?
+		ObjectNode, // alloc site 
 	};
 
 private:
@@ -24,14 +26,17 @@ private:
 public:
 	AndersonNode(int idx, const Value* value, NodeType nodeType)
 				:idx(idx), value(value), nodeType(nodeType) {}
+	const Value* getValue() const { return value; }
 };
 
 class NodeFactory {
-	int nextIdx = 0;
-	typedef unique_ptr<AndersonNode> NodePtr;
-	map<NodeIdx, NodePtr> nodeMap;
+	vector<AndersonNode> nodes;
+	map<const Value*, NodeIdx> objNodes;
+	map<const Value*, NodeIdx> valNodes;
 public:
-	NodeIdx createValueNode(const Value* value);
-	NodeIdx createObjectNode(const Value* value);
-	NodeIdx getNextIdx() { return nextIdx++; }
+	NodeIdx createValNode(const Value* value);
+	NodeIdx createObjNode(const Value* value);
+	NodeIdx getValNode(const Value* value)const;
+	NodeIdx getObjNode(const Value* value)const;
+	const Value* getValueByNodeIdx(NodeIdx idx)const;
 };

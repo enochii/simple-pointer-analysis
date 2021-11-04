@@ -38,6 +38,7 @@
 #include <set>
 #include <string>
 #include <stack>
+#include <vector>
 
 #include "NodeFactory.h"
 
@@ -75,14 +76,35 @@ cl::opt<bool> DumpInst("dump-inst",
                                  cl::desc("Dump instructions"),
                                  cl::init(false), cl::Hidden);
 
-///!TODO TO BE COMPLETED BY YOU FOR ASSIGNMENT 2
-///Updated 11/10/2017 by fargo: make all functions
-///processed by mem2reg before this pass.
-struct FuncPtrPass : public ModulePass {
-  static char ID; // Pass identification, replacement for typeid
-  FuncPtrPass() : ModulePass(ID) {}
+cl::opt<bool> DumpCons("dump-cons",
+                                 cl::desc("Dump constraints"),
+                                 cl::init(false), cl::Hidden);
 
-  
+cl::opt<bool> Node2Name("node2name",
+                                 cl::desc("Dump node by index or name"),
+                                 cl::init(false), cl::Hidden);
+struct AndersonConstraint {
+  enum ConstraintType {
+    Copy, AddressOf, Load, Store,
+  };
+  AndersonConstraint(NodeIdx dest, NodeIdx src, ConstraintType type)
+                    :dest(dest), src(src), type(type) {}
+  NodeIdx getDest() { return dest; }
+  NodeIdx getSrc() { return src; }
+  ConstraintType getTy() { return type; }
+private:
+  NodeIdx dest, src;
+  ConstraintType type;
+};
+
+///processed by mem2reg before this pass.
+struct AndersonPass : public ModulePass {
+  static char ID; // Pass identification, replacement for typeid
+  AndersonPass() : ModulePass(ID) {}
+
+  NodeFactory nodeFactory;
+  vector<AndersonConstraint> constraints;
+
   bool runOnModule(Module &M) override {
     if(DumpModuleInfo) {
       M.dump();
@@ -91,14 +113,16 @@ struct FuncPtrPass : public ModulePass {
     for(Function& f:M) {
       collectConstraintsForFunction(&f);
     }
+    if(DumpCons) dumpConstraints();
     return false;
   }
 
+private:
   void collectConstraintsForFunction(const Function *f) {
     for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
          ++itr) {
       auto inst = &*itr.getInstructionIterator();
-      // TODO: create value node here
+      nodeFactory.createValNode(inst);
     }
     for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
          ++itr) {
@@ -113,20 +137,65 @@ struct FuncPtrPass : public ModulePass {
     if(DumpInst) inst->dump();
     switch (inst->getOpcode())
     {
-    case Instruction::Load:
-      break;
-    
-    case Instruction::Store:
-      break;
-    
-    default:
-      break;
+      case Instruction::Alloca: {
+        assert(inst->getType()->isPointerTy());
+        NodeIdx src = nodeFactory.createObjNode(inst);
+        NodeIdx dest = nodeFactory.getValNode(inst);
+        constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+        break;
+      }
+      case Instruction::Load:
+        if(inst->getType()->isPointerTy()) {
+          NodeIdx dest = nodeFactory.getValNode(inst);
+          NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
+          constraints.emplace_back(dest, src, AndersonConstraint::Load);
+        }
+        break;
+      
+      case Instruction::Store:
+        if(inst->getOperand(0)->getType()->isPointerTy()) {
+          NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
+          NodeIdx dest = nodeFactory.getValNode(inst->getOperand(1));
+          constraints.emplace_back(dest, src, AndersonConstraint::Store);
+        }
+        break;
+      
+      default:
+        break;
     }
+  }
+
+  void dumpConstraints() {
+    for(auto &item: constraints) {
+      auto srcStr = idx2str(item.getSrc());
+      auto destStr = idx2str(item.getDest());
+      switch(item.getTy()) {
+        case AndersonConstraint::AddressOf:
+          llvm::errs() << destStr << " <- &" << srcStr << "\n";
+          break;
+        case AndersonConstraint::Copy:
+          llvm::errs() << destStr << " <- " << srcStr << "\n";
+          break;
+        case AndersonConstraint::Load:
+          llvm::errs() << destStr << " <- *" << srcStr << "\n";          
+          break;
+        case AndersonConstraint::Store:
+          llvm::errs() << "*" << destStr << " <- " << srcStr << "\n";
+          break; 
+      }
+    }
+  }
+
+  string idx2str(NodeIdx idx) {
+    if(Node2Name) {
+      auto inst = nodeFactory.getValueByNodeIdx(idx);
+      return inst->getName();
+    } else return to_string(idx);
   }
 };
 
-char FuncPtrPass::ID = 0;
-static RegisterPass<FuncPtrPass> X("my-anderson", "My Anderson implementation");
+char AndersonPass::ID = 0;
+static RegisterPass<AndersonPass> X("my-anderson", "My Anderson implementation");
 
 static cl::opt<std::string>
 InputFilename(cl::Positional,
@@ -139,7 +208,7 @@ int main(int argc, char **argv) {
    SMDiagnostic Err;
    // Parse the command line to read the Inputfilename
    cl::ParseCommandLineOptions(argc, argv,
-                              "FuncPtrPass \n My first LLVM too which does not do much.\n");
+                              "AndersonPass \n My first LLVM too which does not do much.\n");
 
 
    // Load the input module
@@ -157,7 +226,7 @@ int main(int argc, char **argv) {
    Passes.add(llvm::createPromoteMemoryToRegisterPass());
 
    /// Your pass to print Function and Call Instructions
-   Passes.add(new FuncPtrPass());
+   Passes.add(new AndersonPass());
    Passes.run(*M.get());
 }
 
