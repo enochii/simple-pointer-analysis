@@ -110,6 +110,7 @@ struct AndersonPass : public ModulePass {
       M.dump();
       errs()<<"------------------------------\n";
     }
+    collectConstraintsForGlobal(M);
     for(Function& f:M) {
       collectConstraintsForFunction(&f);
     }
@@ -118,6 +119,18 @@ struct AndersonPass : public ModulePass {
   }
 
 private:
+  /*
+  ** currently only add return node for each function, as a context-insensitive
+  ** approach to handle function call. This return node kind of serves as a 
+  ** "core" node which (may) links multiple call sites & return sites
+  */
+  void collectConstraintsForGlobal(Module &M) {
+    for(Function & f:M) {
+      if(f.isIntrinsic() || f.isDeclaration()) continue;
+      if(f.getType()->isPointerTy()) 
+        nodeFactory.createRetNode(&f);
+    }
+  }
   void collectConstraintsForFunction(const Function *f) {
     for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
          ++itr) {
@@ -168,8 +181,59 @@ private:
           }
         }
         break;
+      case Instruction::Call:
+      case Instruction::Invoke: {
+        ImmutableCallSite cs(inst);
+        assert(cs && "wrong callsite?");
+        addConstraintsForCall(cs);
+        break;
+      }
+        break;
+      case Instruction::Ret: 
+        if(inst->getOperand(0)->getType()->isPointerTy()) {
+          NodeIdx dest = nodeFactory.getRetNode(inst->getParent()->getParent());
+          NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
+          constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+        }
+        break;
+        break;
       default:
         break;
+    }
+  }
+
+  /// constraints: ret & call, parameter passing
+  void addConstraintsForCall(ImmutableCallSite cs) {
+    /// direct call
+    if(const Function* f = cs.getCalledFunction()) {
+      if(f->isIntrinsic() || f->isDeclaration()) {
+        llvm::outs() << "external call: " << f->getName() << "\n";
+        return;
+      } else {
+        // 
+        NodeIdx dest = nodeFactory.getValNode(cs.getInstruction());
+        NodeIdx src = nodeFactory.getRetNode(f);
+        constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      } 
+
+    } else {
+      // TODO
+      assert("Not implemented yet");
+    }
+  }
+
+  void addArgConstraints(ImmutableCallSite cs, const Function* f) {
+    auto argIt = cs.arg_begin();
+    auto parIt = f->arg_begin();
+
+    while(argIt != cs.arg_end() && parIt != f->arg_end()) {
+      const Value* arg = *argIt;
+      const Value* par = &*parIt;
+      NodeIdx dest = nodeFactory.getValNode(par);
+      NodeIdx src = nodeFactory.getValNode(arg);
+      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      argIt++; 
+      parIt++;
     }
   }
 
@@ -195,10 +259,43 @@ private:
     }
   }
 
+  // code from https://github.com/jarulraj/llvm/ , the find name is too trivial...
+  std::string getValueName (const Value *v) {
+      // If we can get name directly
+      if (v->getName().str().length() > 0) {
+          return "%" + v->getName().str();
+      } else if (isa<Instruction>(v)) {
+          std::string s = "";
+          raw_string_ostream *strm = new raw_string_ostream(s);
+          v->print(*strm);
+          std::string inst = strm->str();
+          size_t idx1 = inst.find("%");
+          size_t idx2 = inst.find(" ", idx1);
+          if (idx1 != std::string::npos && idx2 != std::string::npos && idx1 == 2) {
+              return inst.substr(idx1, idx2 - idx1);
+          } else {
+              // nothing match
+              return "";
+          }
+      } else if (const ConstantInt *cint = dyn_cast<ConstantInt>(v)) {
+          std::string s = "";
+          raw_string_ostream *strm = new raw_string_ostream(s);
+          cint->getValue().print(*strm, true);
+          return strm->str();
+      } else {
+          std::string s = "";
+          raw_string_ostream *strm = new raw_string_ostream(s);
+          v->print(*strm);
+          std::string inst = strm->str();
+          return "\"" + inst + "\"";
+      }
+  }
+
   string idx2str(NodeIdx idx) {
     if(Node2Name) {
-      auto inst = nodeFactory.getValueByNodeIdx(idx);
-      return inst->getName();
+      auto value = nodeFactory.getValueByNodeIdx(idx);
+      return value->getName();
+      // return getValueName(value);
     } else return to_string(idx);
   }
 };

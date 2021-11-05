@@ -16,6 +16,14 @@ NodeIdx NodeFactory::createObjNode(const Value* value) {
 	return idx;
 }
 
+NodeIdx NodeFactory::createRetNode(const Value* value) {
+	int idx = nodes.size();
+	nodes.emplace_back(idx, value, AndersonNode::ValueNode);
+	assert(retNodes.find(value) == retNodes.end() && "Node already exist");
+	retNodes.emplace(value, idx);
+	return idx;
+}
+
 NodeIdx NodeFactory::getValNode(const Value* value)const {
   assert(valNodes.find(value) != valNodes.end() && "Node dose NOT exist");
   return valNodes.at(value);
@@ -24,6 +32,11 @@ NodeIdx NodeFactory::getValNode(const Value* value)const {
 NodeIdx NodeFactory::getObjNode(const Value* value)const {
   assert(objNodes.find(value) != objNodes.end() && "Node dose NOT exist");
   return objNodes.at(value);
+}
+
+NodeIdx NodeFactory::getRetNode(const Value* value)const {
+  assert(retNodes.find(value) != retNodes.end() && "Node dose NOT exist");
+  return retNodes.at(value);
 }
 
 const Value* NodeFactory::getValueByNodeIdx(NodeIdx idx)const {

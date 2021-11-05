@@ -33,10 +33,15 @@ class NodeFactory {
 	vector<AndersonNode> nodes;
 	map<const Value*, NodeIdx> objNodes;
 	map<const Value*, NodeIdx> valNodes;
+	map<const Value*, NodeIdx> retNodes;
 public:
 	NodeIdx createValNode(const Value* value);
 	NodeIdx createObjNode(const Value* value);
+	NodeIdx createRetNode(const Value* value);
 	NodeIdx getValNode(const Value* value)const;
 	NodeIdx getObjNode(const Value* value)const;
+	NodeIdx getRetNode(const Value* value)const;
+
+	// get the "llvm::Value*"(maybe a inst, func) by node index
 	const Value* getValueByNodeIdx(NodeIdx idx)const;
 };

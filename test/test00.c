@@ -1,6 +1,11 @@
 #include <stdio.h>
 
+// int plus(int op1, int op2) { return op1 + op2; }
+// int minus(int op1, int op2) { return op1 - op2; }
+
+// typedef int(Binary)(int, int);
 int** f(int op, int a, int b) {
+  int c;
   int *p=&a, *q=&b;
   int **w;
   if(op < 2) {
@@ -8,6 +13,11 @@ int** f(int op, int a, int b) {
   } else {
     w = &q;
   }
-  *w = &a;
+  *w = &c;
   return w;
+}
+
+int main() {
+  int **ptr = f(1, 2, 3);
+  return 0;
 }
