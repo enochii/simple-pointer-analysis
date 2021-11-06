@@ -90,7 +90,12 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
         constraints.emplace_back(dest, src, AndersonConstraint::Copy);
       }
       break;
-      break;
+    case Instruction::GetElementPtr: {
+      /// field-insensitive
+      NodeIdx dest = nodeFactory.getValNode(inst);
+      NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
+      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+    }      
     default:
       break;
   }
@@ -153,10 +158,43 @@ void AndersonPass::dumpConstraints() {
   }
 }
 
+
+// code from https://github.com/jarulraj/llvm/ , the find name is too trivial...
+static std::string getValueName (const Value *v) {
+  // If we can get name directly
+  if (v->getName().str().length() > 0) {
+      return "%" + v->getName().str();
+  } else if (isa<Instruction>(v)) {
+      std::string s = "";
+      raw_string_ostream *strm = new raw_string_ostream(s);
+      v->print(*strm);
+      std::string inst = strm->str();
+      size_t idx1 = inst.find("%");
+      size_t idx2 = inst.find(" ", idx1);
+      if (idx1 != std::string::npos && idx2 != std::string::npos && idx1 == 2) {
+          return inst.substr(idx1, idx2 - idx1);
+      } else {
+          // nothing match
+          return "";
+      }
+  } else if (const ConstantInt *cint = dyn_cast<ConstantInt>(v)) {
+      std::string s = "";
+      raw_string_ostream *strm = new raw_string_ostream(s);
+      cint->getValue().print(*strm, true);
+      return strm->str();
+  } else {
+      std::string s = "";
+      raw_string_ostream *strm = new raw_string_ostream(s);
+      v->print(*strm);
+      std::string inst = strm->str();
+      return "\"" + inst + "\"";
+  }
+}
 string AndersonPass::idx2str(NodeIdx idx) {
   if(Node2Name) {
-    // string prefix = nodeFactory.isValueNode(idx)? "":"&";
+    string suffix = nodeFactory.isValueNode(idx)? "":"(obj)";
     auto value = nodeFactory.getValueByNodeIdx(idx);
-    return string(value->getName());
+    // return string(value->getName());
+    return getValueName(value) + suffix;
   } else return to_string(idx);
 }
