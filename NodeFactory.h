@@ -44,4 +44,5 @@ public:
 
 	// get the "llvm::Value*"(maybe a inst, func) by node index
 	const Value* getValueByNodeIdx(NodeIdx idx)const;
+	unsigned getNumNode() { return nodes.size(); }
 };

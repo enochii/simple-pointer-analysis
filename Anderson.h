@@ -63,6 +63,8 @@ private:
   void addConstraintsForCall(ImmutableCallSite cs);
   void addArgConstraints(ImmutableCallSite cs, const Function* f);
 
+  void solveConstraints();
+
   /// dump
   void dumpConstraints();
   string idx2str(NodeIdx idx);

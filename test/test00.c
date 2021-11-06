@@ -17,7 +17,7 @@ int** f(int op, int a, int b) {
   return w;
 }
 
-int main() {
-  int **ptr = f(1, 2, 3);
-  return 0;
-}
+// int main() {
+//   int **ptr = f(1, 2, 3);
+//   return 0;
+// }

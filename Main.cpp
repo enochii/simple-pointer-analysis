@@ -54,6 +54,8 @@ bool AndersonPass::runOnModule(Module &M) {
     collectConstraintsForFunction(&f);
   }
   if(DumpCons) dumpConstraints();
+  /// solve
+  solveConstraints();
   return false;
 }
 
