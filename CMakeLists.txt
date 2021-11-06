@@ -19,6 +19,8 @@ message(STATUS "LLVM LIBS : ${LLVM_LINK_COMPONENTS}")
 add_executable(anderson
   Main.cpp
   NodeFactory.cpp
+  ConstraintCollect.cpp
+  ConstraintSolve.cpp
   )
 
 target_link_libraries(anderson
