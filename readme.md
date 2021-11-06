@@ -10,27 +10,43 @@ A simple prototype of anderson pointer analysis.
   cmake .. # you may need to change the llvm path in `CMakeList.txt`
 
   # run a simple test
-  ./run.sh bc/test00.bc -dump-module -dump-cons -node2name -debug-info  2>bc/00.ll
+  ./run.sh bc/test03.bc -dump-module -dump-cons -node2name -debug-info  2>bc/03.ll
 ```
 
-output constraint:
+for `test03.c`, we have output constraint:
 
 ```shell
-Constraints 12
-a.addr <- &a.addr
-b.addr <- &b.addr
-c <- &c
-p <- &p
-q <- &q
-*p <- a.addr
-*q <- b.addr
-w.0 <- p
-w.0 <- q
-*w.0 <- c
-f <- w.0
-call <- f
+Constraints 10
+%s <- &%s(obj)
+%a <- &%a(obj)
+%b <- &%b(obj)
+%p <- %s
+*%p <- %a
+%p1 <- %s
+*%p1 <- %b
+%p2 <- %s
+%0 <- *%p2
+%f <- %0
+```
+
+and points to set:
+
+```shell
+%f: { %a(obj), %b(obj),  }
+%s: { %s(obj),  }
+%a: { %a(obj),  }
+%b: { %b(obj),  }
+%p: { %s(obj),  }
+%p1: { %s(obj),  }
+%p2: { %s(obj),  }
+%0: { %a(obj), %b(obj),  }
+%s(obj): { %a(obj), %b(obj),  }
+%a(obj): {  }
+%b(obj): {  }
 ```
 
 ### reference
 
 https://github.com/grievejia/andersen
+
+> A really good anderson implementation for study. My implementation is kind of a simplied version. If you just want a prototype, maybe you could have a try~
