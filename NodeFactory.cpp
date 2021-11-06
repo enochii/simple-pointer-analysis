@@ -43,3 +43,7 @@ const Value* NodeFactory::getValueByNodeIdx(NodeIdx idx)const {
 	assert(idx < nodes.size() && "node idx out of bound");
 	return nodes[idx].getValue();
 }
+
+bool NodeFactory::isValueNode(NodeIdx idx) const {
+	return nodes[idx].nodeType == AndersonNode::ValueNode;
+}

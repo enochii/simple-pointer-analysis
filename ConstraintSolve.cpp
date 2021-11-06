@@ -77,17 +77,12 @@ public:
     }
   }
 
-  void dump() {
-    for(unsigned i=0; i<graph.size(); i++) {
-      llvm::errs() << i << ": { ";
-      for(NodeIdx idx:graph[i].getPtsSet())
-        llvm::errs() << idx << ", ";
-      llvm::errs() << " }\n";
-    }
+  const vector<PointsToNode>& getGraph() const {
+    return graph;
   }
 private:
   void initGraph(vector<AndersonConstraint>& constraints) {
-    llvm::errs() << "init points-to graph\n";
+    // llvm::errs() << "init points-to graph\n";
     for(auto& cons:constraints) {
       switch (cons.getTy())
       {
@@ -137,5 +132,15 @@ private:
 void AndersonPass::solveConstraints() {
   PointstoGraph ptg(nodeFactory.getNumNode(), constraints);
   ptg.solve();
-  ptg.dump();
+  dumpPtsSet(ptg.getGraph());
+}
+
+void AndersonPass::dumpPtsSet(const vector<PointsToNode>& graph) {
+  llvm::errs() << "---------------------------------\n";
+  for(unsigned i=0; i<graph.size(); i++) {
+      llvm::errs() << idx2str(i) << ": { ";
+      for(NodeIdx idx:graph[i].getPtsSet())
+        llvm::errs() << idx2str(idx) << ", ";
+      llvm::errs() << " }\n";
+    }
 }

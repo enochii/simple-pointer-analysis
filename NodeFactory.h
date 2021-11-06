@@ -22,7 +22,7 @@ private:
 	int idx; // node id
 	const Value* value; // correspinding inst
 	NodeType nodeType;
-
+friend class NodeFactory;
 public:
 	AndersonNode(int idx, const Value* value, NodeType nodeType)
 				:idx(idx), value(value), nodeType(nodeType) {}
@@ -44,5 +44,6 @@ public:
 
 	// get the "llvm::Value*"(maybe a inst, func) by node index
 	const Value* getValueByNodeIdx(NodeIdx idx)const;
+	bool isValueNode(NodeIdx idx)const;
 	unsigned getNumNode() { return nodes.size(); }
 };

@@ -28,7 +28,8 @@ void AndersonPass::collectConstraintsForFunction(const Function *f) {
   for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
         ++itr) {
     auto inst = &*itr.getInstructionIterator();
-    nodeFactory.createValNode(inst);
+    if(inst->getType()->isPointerTy())
+      nodeFactory.createValNode(inst);
   }
   for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
         ++itr) {
@@ -154,7 +155,8 @@ void AndersonPass::dumpConstraints() {
 
 string AndersonPass::idx2str(NodeIdx idx) {
   if(Node2Name) {
+    // string prefix = nodeFactory.isValueNode(idx)? "":"&";
     auto value = nodeFactory.getValueByNodeIdx(idx);
-    return value->getName();
+    return string(value->getName());
   } else return to_string(idx);
 }

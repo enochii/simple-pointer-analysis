@@ -25,7 +25,7 @@
 using namespace llvm;
 using namespace std;
 
-
+class PointsToNode;
 struct AndersonConstraint {
   enum ConstraintType {
     Copy, AddressOf, Load, Store,
@@ -67,5 +67,6 @@ private:
 
   /// dump
   void dumpConstraints();
+  void dumpPtsSet(const vector<PointsToNode>& graph);
   string idx2str(NodeIdx idx);
 };
