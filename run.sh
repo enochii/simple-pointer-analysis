@@ -1,4 +1,4 @@
-source compile.sh
+source sh/compile.sh
 
 BUILD_DIR="release"
 

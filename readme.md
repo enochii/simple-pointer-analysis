@@ -10,6 +10,7 @@ A simple prototype of anderson pointer analysis.
   cmake .. # you may need to change the llvm path in `CMakeList.txt`
 
   # run a simple test
+  chmod +x run.sh
   ./run.sh bc/test03.bc -dump-module -dump-cons -node2name -debug-info  2>bc/03.ll
 ```
 

@@ -16,13 +16,19 @@ set(LLVM_LINK_COMPONENTS
 message(STATUS "LLVM LIBS : ${LLVM_LINK_COMPONENTS}")
 # Support plugins.
 
-add_executable(anderson
-  Main.cpp
-  NodeFactory.cpp
-  ConstraintCollect.cpp
-  ConstraintSolve.cpp
-  )
+set(SOURCES
+  lib/Main.cpp
+  lib/NodeFactory.cpp
+  lib/ConstraintCollect.cpp
+  lib/ConstraintSolve.cpp
+)
+
+add_executable(anderson ${SOURCES})
 
 target_link_libraries(anderson
 	${LLVM_LINK_COMPONENTS}
 	)
+target_include_directories(anderson
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+)

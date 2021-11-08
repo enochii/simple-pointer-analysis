@@ -4,9 +4,6 @@ bc/
 build/
 release/
 
-#
-lib/
-include/
 
 .bc
 .ll
