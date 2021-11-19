@@ -68,5 +68,5 @@ private:
   /// dump
   void dumpConstraints();
   void dumpPtsSet(const vector<PointsToNode>& graph);
-  string idx2str(NodeIdx idx);
+  string idx2str(NodeIdx idx, bool visualize=true);
 };

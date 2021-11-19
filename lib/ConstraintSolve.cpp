@@ -1,6 +1,7 @@
 #include "Anderson.h"
 
 #include <queue>
+#include <fstream>
 /*
   Constraints solving.
 
@@ -137,10 +138,18 @@ void AndersonPass::solveConstraints() {
 
 void AndersonPass::dumpPtsSet(const vector<PointsToNode>& graph) {
   llvm::errs() << "---------------------------------\n";
+  string dotStr = "digraph points_to_graph {\n";
   for(unsigned i=0; i<graph.size(); i++) {
-      llvm::errs() << idx2str(i) << ": { ";
-      for(NodeIdx idx:graph[i].getPtsSet())
-        llvm::errs() << idx2str(idx) << ", ";
-      llvm::errs() << " }\n";
+    string ptr = idx2str(i);
+    llvm::errs() << ptr << ": { ";
+    for(NodeIdx idx:graph[i].getPtsSet()) {
+      string target = idx2str(idx);
+      llvm::errs() << target << ", ";
+      dotStr += "\t\"" + ptr + "\" -> \"" + target + "\"\n";
     }
+    llvm::errs() << " }\n";
+  }
+  dotStr += "}";
+  ofstream dotFile("output/ptg.dot");
+  dotFile << dotStr;
 }

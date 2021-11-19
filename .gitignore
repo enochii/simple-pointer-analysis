@@ -7,3 +7,7 @@ release/
 
 .bc
 .ll
+
+.dot
+.png
+# output/

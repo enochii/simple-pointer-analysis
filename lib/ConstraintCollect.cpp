@@ -106,13 +106,14 @@ void AndersonPass::addConstraintsForCall(ImmutableCallSite cs) {
   /// direct call
   if(const Function* f = cs.getCalledFunction()) {
     if(f->isIntrinsic() || f->isDeclaration()) {
-      llvm::outs() << "external call: " << f->getName() << "\n";
+      if(DumpDebugInfo) llvm::outs() << "external call: " << f->getName() << "\n";
       return;
     } else {
       // 
       NodeIdx dest = nodeFactory.getValNode(cs.getInstruction());
       NodeIdx src = nodeFactory.getRetNode(f);
       constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      addArgConstraints(cs, f);
     } 
 
   } else {
@@ -128,9 +129,11 @@ void AndersonPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
   while(argIt != cs.arg_end() && parIt != f->arg_end()) {
     const Value* arg = *argIt;
     const Value* par = &*parIt;
-    NodeIdx dest = nodeFactory.getValNode(par);
-    NodeIdx src = nodeFactory.getValNode(arg);
-    constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+    if(arg->getType()->isPointerTy() && par->getType()->isPointerTy()) {
+      NodeIdx dest = nodeFactory.getValNode(par);
+      NodeIdx src = nodeFactory.getValNode(arg);
+      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+    }
     argIt++; 
     parIt++;
   }
@@ -163,7 +166,7 @@ void AndersonPass::dumpConstraints() {
 static std::string getValueName (const Value *v) {
   // If we can get name directly
   if (v->getName().str().length() > 0) {
-      return "%" + v->getName().str();
+      return v->getName().str();
   } else if (isa<Instruction>(v)) {
       std::string s = "";
       raw_string_ostream *strm = new raw_string_ostream(s);
@@ -190,8 +193,8 @@ static std::string getValueName (const Value *v) {
       return "\"" + inst + "\"";
   }
 }
-string AndersonPass::idx2str(NodeIdx idx) {
-  if(Node2Name) {
+string AndersonPass::idx2str(NodeIdx idx, bool visualize) {
+  if(Node2Name || visualize) {
     string suffix = nodeFactory.isValueNode(idx)? "":"(obj)";
     auto value = nodeFactory.getValueByNodeIdx(idx);
     // return string(value->getName());

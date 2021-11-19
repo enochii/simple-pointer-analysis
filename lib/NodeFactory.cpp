@@ -1,3 +1,5 @@
+#include <llvm/Support/raw_ostream.h>
+
 #include "NodeFactory.h"
 
 NodeIdx NodeFactory::createValNode(const Value* value) {
@@ -25,6 +27,8 @@ NodeIdx NodeFactory::createRetNode(const Value* value) {
 }
 
 NodeIdx NodeFactory::getValNode(const Value* value)const {
+	if(valNodes.find(value) == valNodes.end())
+		value->dump();
   assert(valNodes.find(value) != valNodes.end() && "Node dose NOT exist");
   return valNodes.at(value);
 }
