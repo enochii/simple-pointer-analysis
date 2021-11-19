@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "Anderson.h"
+#include "PointerAnalysis.h"
 
 #include <string>
 

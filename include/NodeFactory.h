@@ -11,7 +11,7 @@ using namespace std;
 
 /// Anderson Node definition
 typedef unsigned NodeIdx;
-class AndersonNode {
+class LocationNode {
 public:
 	enum NodeType {
 		ValueNode,  // kind of like pointer?
@@ -24,13 +24,13 @@ private:
 	NodeType nodeType;
 friend class NodeFactory;
 public:
-	AndersonNode(int idx, const Value* value, NodeType nodeType)
+	LocationNode(int idx, const Value* value, NodeType nodeType)
 				:idx(idx), value(value), nodeType(nodeType) {}
 	const Value* getValue() const { return value; }
 };
 
 class NodeFactory {
-	vector<AndersonNode> nodes;
+	vector<LocationNode> nodes;
 	map<const Value*, NodeIdx> objNodes;
 	map<const Value*, NodeIdx> valNodes;
 	map<const Value*, NodeIdx> retNodes;

@@ -4,7 +4,7 @@
 
 NodeIdx NodeFactory::createValNode(const Value* value) {
   int idx = nodes.size();
-	nodes.emplace_back(idx, value, AndersonNode::ValueNode);
+	nodes.emplace_back(idx, value, LocationNode::ValueNode);
 	assert(valNodes.find(value) == valNodes.end() && "Node already exist");
 	valNodes.emplace(value, idx);
 	return idx;
@@ -12,7 +12,7 @@ NodeIdx NodeFactory::createValNode(const Value* value) {
 
 NodeIdx NodeFactory::createObjNode(const Value* value) {
 	int idx = nodes.size();
-	nodes.emplace_back(idx, value, AndersonNode::ObjectNode);
+	nodes.emplace_back(idx, value, LocationNode::ObjectNode);
 	assert(objNodes.find(value) == objNodes.end() && "Node already exist");
 	objNodes.emplace(value, idx);
 	return idx;
@@ -20,7 +20,7 @@ NodeIdx NodeFactory::createObjNode(const Value* value) {
 
 NodeIdx NodeFactory::createRetNode(const Value* value) {
 	int idx = nodes.size();
-	nodes.emplace_back(idx, value, AndersonNode::ValueNode);
+	nodes.emplace_back(idx, value, LocationNode::ValueNode);
 	assert(retNodes.find(value) == retNodes.end() && "Node already exist");
 	retNodes.emplace(value, idx);
 	return idx;
@@ -49,5 +49,5 @@ const Value* NodeFactory::getValueByNodeIdx(NodeIdx idx)const {
 }
 
 bool NodeFactory::isValueNode(NodeIdx idx) const {
-	return nodes[idx].nodeType == AndersonNode::ValueNode;
+	return nodes[idx].nodeType == LocationNode::ValueNode;
 }

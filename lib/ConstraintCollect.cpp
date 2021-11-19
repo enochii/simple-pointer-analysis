@@ -1,4 +1,4 @@
-#include "Anderson.h"
+#include "PointerAnalysis.h"
 
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instructions.h"
@@ -46,14 +46,14 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       assert(inst->getType()->isPointerTy());
       NodeIdx src = nodeFactory.createObjNode(inst);
       NodeIdx dest = nodeFactory.getValNode(inst);
-      constraints.emplace_back(dest, src, AndersonConstraint::AddressOf);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraints::AddressOf);
       break;
     }
     case Instruction::Load:
       if(inst->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, AndersonConstraint::Load);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Load);
       }
       break;
     
@@ -62,7 +62,7 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
         NodeIdx dest = nodeFactory.getValNode(inst->getOperand(1));
-        constraints.emplace_back(dest, src, AndersonConstraint::Store);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Store);
       }
       break;
     case Instruction::PHI: 
@@ -71,7 +71,7 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         for(unsigned i=0; i<phiNode->getNumIncomingValues(); i++) {
           NodeIdx src = nodeFactory.getValNode(phiNode->getIncomingValue(i));
-          constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+          constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
         }
       }
       break;
@@ -87,14 +87,14 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getRetNode(inst->getParent()->getParent());
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
       }
       break;
     case Instruction::GetElementPtr: {
       /// field-insensitive
       NodeIdx dest = nodeFactory.getValNode(inst);
       NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
     }      
     default:
       break;
@@ -112,7 +112,7 @@ void AndersonPass::addConstraintsForCall(ImmutableCallSite cs) {
       // 
       NodeIdx dest = nodeFactory.getValNode(cs.getInstruction());
       NodeIdx src = nodeFactory.getRetNode(f);
-      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
       addArgConstraints(cs, f);
     } 
 
@@ -132,7 +132,7 @@ void AndersonPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
     if(arg->getType()->isPointerTy() && par->getType()->isPointerTy()) {
       NodeIdx dest = nodeFactory.getValNode(par);
       NodeIdx src = nodeFactory.getValNode(arg);
-      constraints.emplace_back(dest, src, AndersonConstraint::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
     }
     argIt++; 
     parIt++;
@@ -145,16 +145,16 @@ void AndersonPass::dumpConstraints() {
     auto srcStr = idx2str(item.getSrc());
     auto destStr = idx2str(item.getDest());
     switch(item.getTy()) {
-      case AndersonConstraint::AddressOf:
+      case PointerAnalysisConstraints::AddressOf:
         llvm::errs() << destStr << " <- &" << srcStr << "\n";
         break;
-      case AndersonConstraint::Copy:
+      case PointerAnalysisConstraints::Copy:
         llvm::errs() << destStr << " <- " << srcStr << "\n";
         break;
-      case AndersonConstraint::Load:
+      case PointerAnalysisConstraints::Load:
         llvm::errs() << destStr << " <- *" << srcStr << "\n";          
         break;
-      case AndersonConstraint::Store:
+      case PointerAnalysisConstraints::Store:
         llvm::errs() << "*" << destStr << " <- " << srcStr << "\n";
         break; 
     }

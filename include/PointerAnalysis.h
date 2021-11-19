@@ -26,11 +26,11 @@ using namespace llvm;
 using namespace std;
 
 class PointsToNode;
-struct AndersonConstraint {
+struct PointerAnalysisConstraints {
   enum ConstraintType {
     Copy, AddressOf, Load, Store,
   };
-  AndersonConstraint(NodeIdx dest, NodeIdx src, ConstraintType type)
+  PointerAnalysisConstraints(NodeIdx dest, NodeIdx src, ConstraintType type)
                     :dest(dest), src(src), type(type) {}
   NodeIdx getDest() { return dest; }
   NodeIdx getSrc() { return src; }
@@ -46,10 +46,10 @@ struct AndersonPass : public ModulePass {
   AndersonPass() : ModulePass(ID) {}
 
   NodeFactory nodeFactory;
-  vector<AndersonConstraint> constraints;
+  vector<PointerAnalysisConstraints> constraints;
 
   bool runOnModule(Module &M) override;
-
+  string idx2str(NodeIdx idx, bool visualize=true);
 private:
   /*
   ** currently only add return node for each function, as a context-insensitive
@@ -68,5 +68,4 @@ private:
   /// dump
   void dumpConstraints();
   void dumpPtsSet(const vector<PointsToNode>& graph);
-  string idx2str(NodeIdx idx, bool visualize=true);
 };

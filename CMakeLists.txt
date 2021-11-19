@@ -16,12 +16,13 @@ set(LLVM_LINK_COMPONENTS
 message(STATUS "LLVM LIBS : ${LLVM_LINK_COMPONENTS}")
 # Support plugins.
 
-set(SOURCES
-  lib/Main.cpp
-  lib/NodeFactory.cpp
-  lib/ConstraintCollect.cpp
-  lib/ConstraintSolve.cpp
-)
+#set(SOURCES
+#  lib/Main.cpp
+#  lib/NodeFactory.cpp
+#  lib/ConstraintCollect.cpp
+#  lib/ConstraintSolve.cpp
+#)
+file(GLOB SOURCES "lib/*.cpp")
 
 add_executable(anderson ${SOURCES})
 
