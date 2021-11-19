@@ -44,7 +44,7 @@ cl::opt<bool> DumpModuleInfo("dump-module",
                                  cl::desc("Dump Module info into stderr"),
                                  cl::init(false), cl::Hidden);
 
-bool AndersonPass::runOnModule(Module &M) {
+bool PAPass::runOnModule(Module &M) {
   if(DumpModuleInfo) {
     M.dump();
     errs()<<"------------------------------\n";
@@ -60,8 +60,8 @@ bool AndersonPass::runOnModule(Module &M) {
 }
 
 
-char AndersonPass::ID = 0;
-static RegisterPass<AndersonPass> X("my-anderson", "My Anderson implementation");
+char PAPass::ID = 0;
+static RegisterPass<PAPass> X("my-anderson", "My Anderson implementation");
 
 static cl::opt<std::string>
 InputFilename(cl::Positional,
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
    SMDiagnostic Err;
    // Parse the command line to read the Inputfilename
    cl::ParseCommandLineOptions(argc, argv,
-                              "AndersonPass \n My first LLVM too which does not do much.\n");
+                              "PAPass \n My first LLVM too which does not do much.\n");
 
 
    // Load the input module
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
    Passes.add(llvm::createPromoteMemoryToRegisterPass());
 
    /// Your pass to print Function and Call Instructions
-   Passes.add(new AndersonPass());
+   Passes.add(new PAPass());
    Passes.run(*M.get());
 }
 

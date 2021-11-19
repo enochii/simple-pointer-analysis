@@ -26,11 +26,11 @@ using namespace llvm;
 using namespace std;
 
 class PointsToNode;
-struct PointerAnalysisConstraints {
+struct PointerAnalysisConstraint {
   enum ConstraintType {
     Copy, AddressOf, Load, Store,
   };
-  PointerAnalysisConstraints(NodeIdx dest, NodeIdx src, ConstraintType type)
+  PointerAnalysisConstraint(NodeIdx dest, NodeIdx src, ConstraintType type)
                     :dest(dest), src(src), type(type) {}
   NodeIdx getDest() { return dest; }
   NodeIdx getSrc() { return src; }
@@ -41,12 +41,13 @@ private:
 };
 
 ///processed by mem2reg before this pass.
-struct AndersonPass : public ModulePass {
+/// Pointer Analysis Pass
+struct PAPass : public ModulePass {
   static char ID; // Pass identification, replacement for typeid
-  AndersonPass() : ModulePass(ID) {}
+  PAPass() : ModulePass(ID) {}
 
   NodeFactory nodeFactory;
-  vector<PointerAnalysisConstraints> constraints;
+  vector<PointerAnalysisConstraint> constraints;
 
   bool runOnModule(Module &M) override;
   string idx2str(NodeIdx idx, bool visualize=true);

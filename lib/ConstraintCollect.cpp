@@ -17,14 +17,14 @@ cl::opt<bool> Node2Name("node2name",
                                  cl::desc("Dump node by index or name"),
                                  cl::init(false), cl::Hidden);
 
-void AndersonPass::collectConstraintsForGlobal(Module &M) {
+void PAPass::collectConstraintsForGlobal(Module &M) {
   for(Function & f:M) {
     if(f.isIntrinsic() || f.isDeclaration()) continue;
     if(f.getType()->isPointerTy()) 
       nodeFactory.createRetNode(&f);
   }
 }
-void AndersonPass::collectConstraintsForFunction(const Function *f) {
+void PAPass::collectConstraintsForFunction(const Function *f) {
   for (const_inst_iterator itr = inst_begin(f), ite = inst_end(f); itr != ite;
         ++itr) {
     auto inst = &*itr.getInstructionIterator();
@@ -38,7 +38,7 @@ void AndersonPass::collectConstraintsForFunction(const Function *f) {
   }
 }
 
-void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
+void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
   if(DumpInst) inst->dump();
   switch (inst->getOpcode())
   {
@@ -46,14 +46,14 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       assert(inst->getType()->isPointerTy());
       NodeIdx src = nodeFactory.createObjNode(inst);
       NodeIdx dest = nodeFactory.getValNode(inst);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraints::AddressOf);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraint::AddressOf);
       break;
     }
     case Instruction::Load:
       if(inst->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Load);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Load);
       }
       break;
     
@@ -62,7 +62,7 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
         NodeIdx dest = nodeFactory.getValNode(inst->getOperand(1));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Store);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Store);
       }
       break;
     case Instruction::PHI: 
@@ -71,7 +71,7 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         for(unsigned i=0; i<phiNode->getNumIncomingValues(); i++) {
           NodeIdx src = nodeFactory.getValNode(phiNode->getIncomingValue(i));
-          constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
+          constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
         }
       }
       break;
@@ -87,14 +87,14 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getRetNode(inst->getParent()->getParent());
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
+        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
       }
       break;
     case Instruction::GetElementPtr: {
       /// field-insensitive
       NodeIdx dest = nodeFactory.getValNode(inst);
       NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
     }      
     default:
       break;
@@ -102,7 +102,7 @@ void AndersonPass::collectConstraintsForInstruction(const Instruction* inst) {
 }
 
 /// constraints: ret & call, parameter passing
-void AndersonPass::addConstraintsForCall(ImmutableCallSite cs) {
+void PAPass::addConstraintsForCall(ImmutableCallSite cs) {
   /// direct call
   if(const Function* f = cs.getCalledFunction()) {
     if(f->isIntrinsic() || f->isDeclaration()) {
@@ -112,7 +112,7 @@ void AndersonPass::addConstraintsForCall(ImmutableCallSite cs) {
       // 
       NodeIdx dest = nodeFactory.getValNode(cs.getInstruction());
       NodeIdx src = nodeFactory.getRetNode(f);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
       addArgConstraints(cs, f);
     } 
 
@@ -122,7 +122,7 @@ void AndersonPass::addConstraintsForCall(ImmutableCallSite cs) {
   }
 }
 
-void AndersonPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
+void PAPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
   auto argIt = cs.arg_begin();
   auto parIt = f->arg_begin();
 
@@ -132,29 +132,29 @@ void AndersonPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
     if(arg->getType()->isPointerTy() && par->getType()->isPointerTy()) {
       NodeIdx dest = nodeFactory.getValNode(par);
       NodeIdx src = nodeFactory.getValNode(arg);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraints::Copy);
+      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
     }
     argIt++; 
     parIt++;
   }
 }
 
-void AndersonPass::dumpConstraints() {
+void PAPass::dumpConstraints() {
   llvm::errs() << "Constraints " << constraints.size() << "\n";
   for(auto &item: constraints) {
     auto srcStr = idx2str(item.getSrc());
     auto destStr = idx2str(item.getDest());
     switch(item.getTy()) {
-      case PointerAnalysisConstraints::AddressOf:
+      case PointerAnalysisConstraint::AddressOf:
         llvm::errs() << destStr << " <- &" << srcStr << "\n";
         break;
-      case PointerAnalysisConstraints::Copy:
+      case PointerAnalysisConstraint::Copy:
         llvm::errs() << destStr << " <- " << srcStr << "\n";
         break;
-      case PointerAnalysisConstraints::Load:
+      case PointerAnalysisConstraint::Load:
         llvm::errs() << destStr << " <- *" << srcStr << "\n";          
         break;
-      case PointerAnalysisConstraints::Store:
+      case PointerAnalysisConstraint::Store:
         llvm::errs() << "*" << destStr << " <- " << srcStr << "\n";
         break; 
     }
@@ -193,7 +193,7 @@ static std::string getValueName (const Value *v) {
       return "\"" + inst + "\"";
   }
 }
-string AndersonPass::idx2str(NodeIdx idx, bool visualize) {
+string PAPass::idx2str(NodeIdx idx, bool visualize) {
   if(Node2Name || visualize) {
     string suffix = nodeFactory.isValueNode(idx)? "":"(obj)";
     auto value = nodeFactory.getValueByNodeIdx(idx);

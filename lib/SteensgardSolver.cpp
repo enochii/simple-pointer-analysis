@@ -1,7 +1,16 @@
-#include "UnionSet.h"
+
 #include <map>
+#include <set>
+#include "SteensgardSolver.h"
 
-class SteensgradPTG {
-  UnionSet uset;
+USetIdx SteensgradPTG::createDeferenceNode(USetIdx deferencedIdx) {
+  return 0;
+}
 
-};
+void SteensgradPTG::solve() {
+
+}
+
+void SteensgradPTG::dumpGraph(PAPass& pass) {
+
+}

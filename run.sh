@@ -3,6 +3,7 @@ source sh/compile.sh
 BUILD_DIR="release"
 OUTPUT_DIR="output"
 
+rm -rf $OUTPUT_DIR
 mkdir $OUTPUT_DIR
 cd $BUILD_DIR
 make

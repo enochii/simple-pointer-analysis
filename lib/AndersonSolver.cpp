@@ -2,7 +2,7 @@
 
 #include <fstream>
   
-AndersonPTG::AndersonPTG(unsigned n, vector<PointerAnalysisConstraints>& constraints)
+AndersonPTG::AndersonPTG(unsigned n, vector<PointerAnalysisConstraint>& constraints)
     : graph(n) { initGraph(constraints); }
 
 void AndersonPTG::solve() {
@@ -22,23 +22,23 @@ void AndersonPTG::solve() {
 const vector<PointsToNode>& AndersonPTG::getGraph() const {
   return graph;
 }
-void AndersonPTG::initGraph(vector<PointerAnalysisConstraints>& constraints) {
+void AndersonPTG::initGraph(vector<PointerAnalysisConstraint>& constraints) {
   // llvm::errs() << "init points-to graph\n";
   for(auto& cons:constraints) {
     switch (cons.getTy())
     {
-    case PointerAnalysisConstraints::Copy :
+    case PointerAnalysisConstraint::Copy :
       graph[cons.getSrc()].addSuccessor(cons.getDest());
       break;
-    case PointerAnalysisConstraints::Load :
+    case PointerAnalysisConstraint::Load :
       // <- *
       graph[cons.getSrc()].addLoad(cons.getDest());
       break;
-    case PointerAnalysisConstraints::Store:
+    case PointerAnalysisConstraint::Store:
       // * <-
       graph[cons.getDest()].addStore(cons.getSrc());
       break;
-    case PointerAnalysisConstraints::AddressOf: {
+    case PointerAnalysisConstraint::AddressOf: {
       /// init
       NodeIdx destIdx = cons.getDest();
       graph[destIdx].addPointee(cons.getSrc());
@@ -69,21 +69,31 @@ void AndersonPTG::propagate(NodeIdx dest, NodeIdx src) {
   if(changed) worklist.push(dest);
 }
 
+string tabAndNewLine(string s) {
+  return "\t" + s + ";\n";
+} 
 
-void AndersonPTG::dumpPtsSet(AndersonPass& andersonPass) {
+string quote(string s) {
+  return "\"" + s + "\"";
+}
+
+void AndersonPTG::dumpPtsSet(PAPass& pass) {
   llvm::errs() << "---------------------------------\n";
   string dotStr = "digraph anderson_ptg {\n";
+  dotStr += tabAndNewLine("graph [label=\"Anderson Pointer Analysis\",labelloc=t,fontsize=30]");
+	dotStr += tabAndNewLine("node [color=blue]");
   for(unsigned i=0; i<graph.size(); i++) {
     if(graph[i].getPtsSet().empty()) continue;
-    string ptr = andersonPass.idx2str(i);
+    string ptr = pass.idx2str(i);
     llvm::errs() << ptr << ": { ";
     for(NodeIdx idx:graph[i].getPtsSet()) {
-      string target = andersonPass.idx2str(idx);
+      string target = pass.idx2str(idx);
       llvm::errs() << target << ", ";
-      dotStr += "\t\"" + ptr + "\" -> \"" + target + "\"\n";
+      dotStr += tabAndNewLine(quote(ptr) + " -> " + quote(target));
     }
     llvm::errs() << " }\n";
   }
+  
   dotStr += "}";
   ofstream dotFile("output/ptg.dot");
   dotFile << dotStr;
