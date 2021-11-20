@@ -1,11 +1,11 @@
 ## pointer analysis
 
-A simple prototype of pointer analysis. It currently includes:
+A simple prototype of pointer analysis which trys to be as simple as possible to learn the basic algorithm. It currently includes:
 
 - anderson/inclusion pointer analysis
 - steensgard/unification pointer analysis
 
-the default chosen algorithm is `anderson`, you can specify it in command line argument `-algo` follow by "steen" or "ander".
+the default chosen algorithm is `anderson`, you can specify it in command line argument `-steen`.
 
 ### Build & run
 
@@ -18,7 +18,7 @@ the default chosen algorithm is `anderson`, you can specify it in command line a
   chmod +x run.sh
   ./run.sh bc/test00.bc
   # for steensgard/unification pointer analysis, type
-  ./run.sh bc/test01.bc -type steen
+  ./run.sh bc/test01.bc -steen
 ```
 
 the points-to-graph will output as a ".png" file if you have `graphviz` installed. The sample figure:
@@ -32,4 +32,4 @@ other command line arguments:
 
 ### reference
 
-https://github.com/grievejia/andersen : A really good anderson implementation for study.
+https://github.com/grievejia/andersen : A really good anderson implementation for study, but it's more complicated.

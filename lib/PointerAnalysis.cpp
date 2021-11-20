@@ -2,7 +2,9 @@
 #include "AndersonSolver.h"
 #include "SteensgardSolver.h"
 
-static cl::list<string>  Argv(cl::ConsumeAfter, cl::desc("<program arguments>..."));
+// cl::list<string>  Argv(cl::ConsumeAfter, cl::desc("<program arguments>..."));
+cl::opt<bool> Steensgard("steen", cl::desc("Steensgrad/Unification pointer analysis"),
+                          cl::init(false), cl::Hidden);
 
 enum PA_TYPE {
   INCLUSION, 
@@ -14,19 +16,19 @@ static string STR_UNIFICATION = "unification";
 static string STR_INCLUSION = "inclusion";
 
 void PAPass::solveConstraints() {
-  PA_TYPE type = INCLUSION;
-  for(auto it=Argv.begin(); it!=Argv.end(); it++) {
-    if(*it != "-algo") continue;
-    ++it;
-    assert(it != Argv.end());
-    // llvm::errs() << "algo: " << *it << "\n";
-    if(STR_ANDERSON == *it || STR_INCLUSION == *it) type = PA_TYPE::INCLUSION;
-    else if(STR_STEENSGARD == *it || STR_UNIFICATION == *it) type = PA_TYPE::UNIFICATION;
-    else {
-      llvm::errs() << "Invalid parameter: -algo " << *it << "\n";
-    }
-    break;
-  }
+  PA_TYPE type = Steensgard? UNIFICATION : INCLUSION;
+  // for(auto it=Argv.begin(); it!=Argv.end(); it++) {
+  //   if(*it != "-algo") continue;
+  //   ++it;
+  //   assert(it != Argv.end());
+  //   // llvm::errs() << "algo: " << *it << "\n";
+  //   if(STR_ANDERSON == *it || STR_INCLUSION == *it) type = PA_TYPE::INCLUSION;
+  //   else if(STR_STEENSGARD == *it || STR_UNIFICATION == *it) type = PA_TYPE::UNIFICATION;
+  //   else {
+  //     llvm::errs() << "Invalid parameter: -algo " << *it << "\n";
+  //   }
+  //   break;
+  // }
   if(type == INCLUSION) {
     AndersonPTG ptg(nodeFactory.getNumNode(), constraints);
     ptg.solve();

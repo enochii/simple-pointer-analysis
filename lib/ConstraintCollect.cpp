@@ -84,7 +84,8 @@ void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
     }
       break;
     case Instruction::Ret: 
-      if(inst->getOperand(0)->getType()->isPointerTy()) {
+      // do not handle pointer args
+      if(inst->getNumOperands()>0 && inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getRetNode(inst->getParent()->getParent());
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
         constraints.emplace_back(dest, src, PAConstraint::Copy);

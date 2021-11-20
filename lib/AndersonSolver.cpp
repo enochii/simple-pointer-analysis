@@ -78,20 +78,20 @@ static string quote(string s) {
 }
 
 void AndersonPTG::dumpGraph(PAPass& pass) {
-  llvm::errs() << "---------------------------------\n";
+  // llvm::errs() << "---------------------------------\n";
   string dotStr = "digraph anderson_ptg {\n";
   dotStr += tabAndNewLine("graph [label=\"Anderson Pointer Analysis\",labelloc=t,fontsize=30]");
 	dotStr += tabAndNewLine("node [color=blue]");
   for(unsigned i=0; i<graph.size(); i++) {
     if(graph[i].getPtsSet().empty()) continue;
     string ptr = pass.idx2str(i);
-    llvm::errs() << ptr << ": { ";
+    // llvm::errs() << ptr << ": { ";
     for(NodeIdx idx:graph[i].getPtsSet()) {
       string target = pass.idx2str(idx);
-      llvm::errs() << target << ", ";
+      // llvm::errs() << target << ", ";
       dotStr += tabAndNewLine(quote(ptr) + " -> " + quote(target));
     }
-    llvm::errs() << " }\n";
+    // llvm::errs() << " }\n";
   }
   
   dotStr += "}";
