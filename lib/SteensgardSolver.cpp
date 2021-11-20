@@ -4,6 +4,7 @@
 #include <fstream>
 #include "SteensgardSolver.h"
 
+
 static void merge(PointsToSet& dest, const PointsToSet& src) {
   dest.insert(src.begin(), src.end());
 }

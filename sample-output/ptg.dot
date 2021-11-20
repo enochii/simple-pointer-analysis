@@ -1,17 +1,7 @@
-digraph points_to_graph {
-	"f" -> "p(obj)"
-	"f" -> "q(obj)"
-	"a.addr" -> "a.addr(obj)"
-	"b.addr" -> "b.addr(obj)"
-	"c" -> "c(obj)"
-	"p" -> "p(obj)"
-	"q" -> "q(obj)"
-	"w.0" -> "p(obj)"
-	"w.0" -> "q(obj)"
-	"p(obj)" -> "a.addr(obj)"
-	"p(obj)" -> "c(obj)"
-	"q(obj)" -> "b.addr(obj)"
-	"q(obj)" -> "c(obj)"
-	"call" -> "p(obj)"
-	"call" -> "q(obj)"
+digraph unification_ptg {
+	graph [label="Steensgard Pointer Analysis",labelloc=t,fontsize=30];
+	node [color=blue];
+	"{c, }" -> "{c(obj), }";
+	"{f, p, q, w.0, }" -> "{a.addr, b.addr, p(obj), q(obj), }";
+	"{a.addr, b.addr, p(obj), q(obj), }" -> "{a.addr(obj), b.addr(obj), }";
 }

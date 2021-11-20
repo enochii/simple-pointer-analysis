@@ -1,53 +1,35 @@
-## Anderson pointer analysis
+## pointer analysis
 
-A simple prototype of anderson pointer analysis.
+A simple prototype of pointer analysis. It currently includes:
+
+- anderson/inclusion pointer analysis
+- steensgard/unification pointer analysis
+
+the default chosen algorithm is `anderson`, you can specify it in command line argument `-algo` follow by "steen" or "ander".
 
 ### Build & run
 
 ```shell
   mkdir build
   cd build
-  cmake .. # you may need to change the llvm path in `CMakeList.txt`
+  cmake .. # you may need to change the hard-coded llvm path in `CMakeList.txt`
 
   # run a simple test
   chmod +x run.sh
-  ./run.sh bc/test03.bc -dump-module -dump-cons -node2name -debug-info  2>bc/03.ll
+  ./run.sh bc/test00.bc
+  # for steensgard/unification pointer analysis, type
+  ./run.sh bc/test01.bc -type steen
 ```
 
-for `test03.c`, we have output constraint:
+the points-to-graph will output as a ".png" file if you have `graphviz` installed. The sample figure:
 
-```shell
-Constraints 10
-%s <- &%s(obj)
-%a <- &%a(obj)
-%b <- &%b(obj)
-%p <- %s
-*%p <- %a
-%p1 <- %s
-*%p1 <- %b
-%p2 <- %s
-%0 <- *%p2
-%f <- %0
-```
+![figure](./sample-output/ptg.png)
 
-and points to set:
+other command line arguments:
 
-```shell
-%f: { %a(obj), %b(obj),  }
-%s: { %s(obj),  }
-%a: { %a(obj),  }
-%b: { %b(obj),  }
-%p: { %s(obj),  }
-%p1: { %s(obj),  }
-%p2: { %s(obj),  }
-%0: { %a(obj), %b(obj),  }
-%s(obj): { %a(obj), %b(obj),  }
-%a(obj): {  }
-%b(obj): {  }
-```
+- `-dump-module`: dump module
+- `-dump-cons`: dump constraints
 
 ### reference
 
-https://github.com/grievejia/andersen
-
-> A really good anderson implementation for study. My implementation is kind of a simplied version. If you just want a prototype, maybe you could have a try~
+https://github.com/grievejia/andersen : A really good anderson implementation for study.
