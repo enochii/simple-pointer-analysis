@@ -22,6 +22,7 @@ public:
   }
 
   USetIdx find(USetIdx from) {
+    assert(from >= 0);
     int par = parent[from];
     if(par < 0) return from;
     return parent[from] = find(par);
@@ -41,5 +42,14 @@ public:
       parent[px] = py;
       return py;
     }
+  }
+
+  map<USetIdx, set<USetIdx>> getClasses() {
+    map<USetIdx, set<USetIdx>> ret;
+    for(USetIdx i=0; i<parent.size(); i++) {
+      auto pi = find(i);
+      ret[pi].insert(i);
+    }
+    return ret;
   }
 };

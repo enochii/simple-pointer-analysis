@@ -4,23 +4,22 @@
 #include <map>
 #include <set>
 
-class PointsToSet {
-  set<NodeIdx> st;
+typedef set<NodeIdx> PointsToSet;
 
-public:
-  void merge(const PointsToSet& src) {
-    st.insert(src.st.begin(), src.st.end());
-  }
-};
-
-class SteensgradPTG {
+class SteensgardPTG {
   UnionSet uset;
   // pointer analysis as type inference
   map<USetIdx, PointsToSet> type;
 
   USetIdx createDeferenceNode(USetIdx deferencedIdx);
+  void run(vector<PAConstraint> &constraints);
+  USetIdx join(USetIdx x, USetIdx y);
+  void joinPts(USetIdx ptr);
+  void insert(USetIdx dest, USetIdx loc);
 public:
-  SteensgradPTG(int locationCnt, vector<PointerAnalysisConstraint> &constraints);
+  SteensgardPTG(int locationCnt, vector<PAConstraint> &constraints):uset(locationCnt){
+    run(constraints);
+  }
   void solve();
   void dumpGraph(PAPass& pass);
 };

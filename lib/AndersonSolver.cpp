@@ -2,7 +2,7 @@
 
 #include <fstream>
   
-AndersonPTG::AndersonPTG(unsigned n, vector<PointerAnalysisConstraint>& constraints)
+AndersonPTG::AndersonPTG(unsigned n, vector<PAConstraint>& constraints)
     : graph(n) { initGraph(constraints); }
 
 void AndersonPTG::solve() {
@@ -22,23 +22,23 @@ void AndersonPTG::solve() {
 const vector<PointsToNode>& AndersonPTG::getGraph() const {
   return graph;
 }
-void AndersonPTG::initGraph(vector<PointerAnalysisConstraint>& constraints) {
+void AndersonPTG::initGraph(vector<PAConstraint>& constraints) {
   // llvm::errs() << "init points-to graph\n";
   for(auto& cons:constraints) {
     switch (cons.getTy())
     {
-    case PointerAnalysisConstraint::Copy :
+    case PAConstraint::Copy :
       graph[cons.getSrc()].addSuccessor(cons.getDest());
       break;
-    case PointerAnalysisConstraint::Load :
+    case PAConstraint::Load :
       // <- *
       graph[cons.getSrc()].addLoad(cons.getDest());
       break;
-    case PointerAnalysisConstraint::Store:
+    case PAConstraint::Store:
       // * <-
       graph[cons.getDest()].addStore(cons.getSrc());
       break;
-    case PointerAnalysisConstraint::AddressOf: {
+    case PAConstraint::AddressOf: {
       /// init
       NodeIdx destIdx = cons.getDest();
       graph[destIdx].addPointee(cons.getSrc());
@@ -69,15 +69,15 @@ void AndersonPTG::propagate(NodeIdx dest, NodeIdx src) {
   if(changed) worklist.push(dest);
 }
 
-string tabAndNewLine(string s) {
+static string tabAndNewLine(string s) {
   return "\t" + s + ";\n";
 } 
 
-string quote(string s) {
+static string quote(string s) {
   return "\"" + s + "\"";
 }
 
-void AndersonPTG::dumpPtsSet(PAPass& pass) {
+void AndersonPTG::dumpGraph(PAPass& pass) {
   llvm::errs() << "---------------------------------\n";
   string dotStr = "digraph anderson_ptg {\n";
   dotStr += tabAndNewLine("graph [label=\"Anderson Pointer Analysis\",labelloc=t,fontsize=30]");

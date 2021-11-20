@@ -19,19 +19,19 @@ class AndersonPTG {
   typedef NodeIdx WLItem;
   queue<WLItem> worklist;
 public:
-  AndersonPTG(unsigned n, vector<PointerAnalysisConstraint>& constraints);
+  AndersonPTG(unsigned n, vector<PAConstraint>& constraints);
   
   void solve();
 
   const vector<PointsToNode>& getGraph() const;
 private:
-  void initGraph(vector<PointerAnalysisConstraint>& constraints);
+  void initGraph(vector<PAConstraint>& constraints);
   void insertEdge(NodeIdx src, NodeIdx dest);
   void propagate(NodeIdx dest, const NodeSet& st);
   void propagate(NodeIdx dest, NodeIdx src);
 
 public:
-  void dumpPtsSet(PAPass& pass);
+  void dumpGraph(PAPass& pass);
 };
 
 typedef set<NodeIdx> NodeSet;

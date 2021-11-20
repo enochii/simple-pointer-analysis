@@ -26,11 +26,11 @@ using namespace llvm;
 using namespace std;
 
 class PointsToNode;
-struct PointerAnalysisConstraint {
+struct PAConstraint {
   enum ConstraintType {
     Copy, AddressOf, Load, Store,
   };
-  PointerAnalysisConstraint(NodeIdx dest, NodeIdx src, ConstraintType type)
+  PAConstraint(NodeIdx dest, NodeIdx src, ConstraintType type)
                     :dest(dest), src(src), type(type) {}
   NodeIdx getDest() { return dest; }
   NodeIdx getSrc() { return src; }
@@ -47,7 +47,7 @@ struct PAPass : public ModulePass {
   PAPass() : ModulePass(ID) {}
 
   NodeFactory nodeFactory;
-  vector<PointerAnalysisConstraint> constraints;
+  vector<PAConstraint> constraints;
 
   bool runOnModule(Module &M) override;
   string idx2str(NodeIdx idx, bool visualize=true);

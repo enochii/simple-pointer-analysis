@@ -46,14 +46,14 @@ void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
       assert(inst->getType()->isPointerTy());
       NodeIdx src = nodeFactory.createObjNode(inst);
       NodeIdx dest = nodeFactory.getValNode(inst);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraint::AddressOf);
+      constraints.emplace_back(dest, src, PAConstraint::AddressOf);
       break;
     }
     case Instruction::Load:
       if(inst->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Load);
+        constraints.emplace_back(dest, src, PAConstraint::Load);
       }
       break;
     
@@ -62,7 +62,7 @@ void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
         NodeIdx dest = nodeFactory.getValNode(inst->getOperand(1));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Store);
+        constraints.emplace_back(dest, src, PAConstraint::Store);
       }
       break;
     case Instruction::PHI: 
@@ -71,7 +71,7 @@ void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
         NodeIdx dest = nodeFactory.getValNode(inst);
         for(unsigned i=0; i<phiNode->getNumIncomingValues(); i++) {
           NodeIdx src = nodeFactory.getValNode(phiNode->getIncomingValue(i));
-          constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
+          constraints.emplace_back(dest, src, PAConstraint::Copy);
         }
       }
       break;
@@ -87,14 +87,14 @@ void PAPass::collectConstraintsForInstruction(const Instruction* inst) {
       if(inst->getOperand(0)->getType()->isPointerTy()) {
         NodeIdx dest = nodeFactory.getRetNode(inst->getParent()->getParent());
         NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-        constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
+        constraints.emplace_back(dest, src, PAConstraint::Copy);
       }
       break;
     case Instruction::GetElementPtr: {
       /// field-insensitive
       NodeIdx dest = nodeFactory.getValNode(inst);
       NodeIdx src = nodeFactory.getValNode(inst->getOperand(0));
-      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
+      constraints.emplace_back(dest, src, PAConstraint::Copy);
     }      
     default:
       break;
@@ -112,7 +112,7 @@ void PAPass::addConstraintsForCall(ImmutableCallSite cs) {
       // 
       NodeIdx dest = nodeFactory.getValNode(cs.getInstruction());
       NodeIdx src = nodeFactory.getRetNode(f);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
+      constraints.emplace_back(dest, src, PAConstraint::Copy);
       addArgConstraints(cs, f);
     } 
 
@@ -132,7 +132,7 @@ void PAPass::addArgConstraints(ImmutableCallSite cs, const Function* f) {
     if(arg->getType()->isPointerTy() && par->getType()->isPointerTy()) {
       NodeIdx dest = nodeFactory.getValNode(par);
       NodeIdx src = nodeFactory.getValNode(arg);
-      constraints.emplace_back(dest, src, PointerAnalysisConstraint::Copy);
+      constraints.emplace_back(dest, src, PAConstraint::Copy);
     }
     argIt++; 
     parIt++;
@@ -145,16 +145,16 @@ void PAPass::dumpConstraints() {
     auto srcStr = idx2str(item.getSrc());
     auto destStr = idx2str(item.getDest());
     switch(item.getTy()) {
-      case PointerAnalysisConstraint::AddressOf:
+      case PAConstraint::AddressOf:
         llvm::errs() << destStr << " <- &" << srcStr << "\n";
         break;
-      case PointerAnalysisConstraint::Copy:
+      case PAConstraint::Copy:
         llvm::errs() << destStr << " <- " << srcStr << "\n";
         break;
-      case PointerAnalysisConstraint::Load:
+      case PAConstraint::Load:
         llvm::errs() << destStr << " <- *" << srcStr << "\n";          
         break;
-      case PointerAnalysisConstraint::Store:
+      case PAConstraint::Store:
         llvm::errs() << "*" << destStr << " <- " << srcStr << "\n";
         break; 
     }
