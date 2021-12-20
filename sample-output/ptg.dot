@@ -1,7 +1,12 @@
 digraph unification_ptg {
 	graph [label="Steensgard Pointer Analysis",labelloc=t,fontsize=30];
 	node [color=blue];
-	"{c, }" -> "{c(obj), }";
-	"{f, p, q, w.0, }" -> "{a.addr, b.addr, p(obj), q(obj), }";
-	"{a.addr, b.addr, p(obj), q(obj), }" -> "{a.addr(obj), b.addr(obj), }";
+	"{f, }" -> "{p(obj), q(obj), }";
+	"{a.addr, }" -> "{a.addr(obj), b.addr(obj), c(obj), }";
+	"{b.addr, }" -> "{a.addr(obj), b.addr(obj), c(obj), }";
+	"{c, }" -> "{a.addr(obj), b.addr(obj), c(obj), }";
+	"{p, }" -> "{p(obj), q(obj), }";
+	"{q, }" -> "{p(obj), q(obj), }";
+	"{w.0, }" -> "{p(obj), q(obj), }";
+	"{p(obj), q(obj), }" -> "{a.addr(obj), b.addr(obj), c(obj), }";
 }

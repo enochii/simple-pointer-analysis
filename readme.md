@@ -20,10 +20,10 @@ Hint: You may need to change the **hard-coded llvm path** in `CMakeList.txt`!
   chmod +x run.sh
   ./run.sh bc/test00.bc
   # for steensgard/unification pointer analysis, type
-  ./run.sh bc/test01.bc -steen
+  ./run.sh bc/test00.bc -steen
 ```
 
-the points-to-graph will output as a ".png" file if you have `graphviz` installed. The sample figure:
+the points-to-graph will output as a ".png" file if you have `graphviz` installed. The sample figure(steensgard with `test00.c`):
 
 <img src=./sample-output/ptg.png height=40% width=40%>
 
