@@ -52,4 +52,13 @@ public:
     }
     return ret;
   }
+
+  void dumpClasses() {
+    auto cls = getClasses();
+    for(auto kv:cls) {
+      llvm::errs() << kv.first << ": {";
+      for(auto c:kv.second) llvm::errs() << c << ",";
+      llvm::errs() << "}\n";
+    }
+  }
 };

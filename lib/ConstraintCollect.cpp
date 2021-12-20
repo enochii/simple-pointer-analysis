@@ -145,6 +145,8 @@ void PAPass::dumpConstraints() {
   for(auto &item: constraints) {
     auto srcStr = idx2str(item.getSrc());
     auto destStr = idx2str(item.getDest());
+    // auto srcStr = item.getSrc();
+    // auto destStr = item.getDest();
     switch(item.getTy()) {
       case PAConstraint::AddressOf:
         llvm::errs() << destStr << " <- &" << srcStr << "\n";

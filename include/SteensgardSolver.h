@@ -16,6 +16,7 @@ class SteensgardPTG {
   USetIdx join(USetIdx x, USetIdx y);
   void joinPts(USetIdx ptr);
   void insert(USetIdx dest, USetIdx loc);
+  void handleEqual(USetIdx x, USetIdx y);
 public:
   SteensgardPTG(int locationCnt, vector<PAConstraint> &constraints):uset(locationCnt){
     run(constraints);

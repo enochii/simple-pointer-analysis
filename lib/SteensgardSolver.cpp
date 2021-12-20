@@ -27,6 +27,20 @@ void SteensgardPTG::joinPts(USetIdx ptr) {
   pts.insert(px);
 }
 
+void SteensgardPTG::handleEqual(USetIdx x, USetIdx y) {
+  x = uset.find(x);
+  y = uset.find(y);
+  if(x == y) return;
+  auto&px = type[x];
+  auto&py = type[y];
+  assert(px.size() <= 1 && py.size() == 1);
+  merge(px, py);
+  type.erase(y);
+  joinPts(x);
+  type[y] = type[x];
+}
+
+
 USetIdx SteensgardPTG::join(USetIdx x, USetIdx y) {
   x = uset.find(x);
   y = uset.find(y);
@@ -50,23 +64,38 @@ void SteensgardPTG::insert(USetIdx dest, USetIdx loc) {
 }
 
 void SteensgardPTG::run(vector<PAConstraint> &constraints) {
+  
+  for(auto &cons:constraints) {
+    if(PAConstraint::AddressOf == cons.getTy()) {
+      /// dest = &src
+      // llvm::errs() << cons.getDest() << " <- &" << cons.getSrc() << "\n";
+      insert(cons.getDest(), cons.getSrc());
+    } else if(PAConstraint::Copy == cons.getTy()) {
+      /// dest = src
+      // llvm::errs() << cons.getDest() << " <- " << cons.getSrc() << "\n";
+      handleEqual(cons.getDest(), cons.getSrc());
+    }
+  }
+
   for(auto &cons:constraints) {
     switch (cons.getTy()) {
-    case PAConstraint::AddressOf: 
-      /// dest = &src
-      insert(cons.getDest(), cons.getSrc());
-      break;
-    case PAConstraint::Copy:
-      /// dest = src
-      join(cons.getDest(), cons.getSrc());
-      break;
-    case PAConstraint::Load:
+    case PAConstraint::Load: {
       /// dest = *src
-      insert(cons.getSrc(), cons.getDest());
+      auto srcPar = uset.find(cons.getSrc());
+      auto &pstSrc = type[srcPar];
+      assert(pstSrc.size() == 1 && "pts.size() should be 1");
+      handleEqual(cons.getDest(), *pstSrc.begin());
       break;
-    case PAConstraint::Store:
-      /// *dest = src
-      insert(cons.getDest(), cons.getSrc());
+    }
+    case PAConstraint::Store: {
+        /// *dest = src
+        // llvm::errs() << "*" << cons.getDest() << " <- " << cons.getSrc() << "\n";
+        auto destPar = uset.find(cons.getDest());
+        auto &pstDest = type[destPar];
+        assert(pstDest.size() == 1 && "pts.size() should be 1");
+        handleEqual(*pstDest.begin(), cons.getSrc());
+        break;
+      }
     default:
       break;
     }
@@ -93,18 +122,19 @@ static string quote(string s) {
 }
 
 void SteensgardPTG::dumpGraph(PAPass& pass) {
+  // uset.dumpClasses();
   auto unionClass = uset.getClasses();
   ofstream dotFile("output/ptg.dot");
   dotFile << "digraph unification_ptg {\n";
   dotFile << tabAndNewLine("graph [label=\"Steensgard Pointer Analysis\",labelloc=t,fontsize=30]");
 	dotFile << tabAndNewLine("node [color=blue]");
 
-  for(auto& kv:unionClass) {
+  for(const auto& kv:unionClass) {
     assert(kv.first == uset.find(kv.first));
     auto &objRoot = type[kv.first];
     if(objRoot.empty()) continue;
     assert(objRoot.size() == 1);
-    auto &objSet = unionClass[*objRoot.begin()];
+    auto &objSet = unionClass[uset.find(*objRoot.begin())];
     auto ptr = set2str(kv.second, pass);
     auto obj = set2str(objSet, pass);
     dotFile << tabAndNewLine(quote(ptr) + " -> " + quote(obj));
