@@ -80,7 +80,7 @@ static string quote(string s) {
 void AndersonPTG::dumpGraph(PAPass& pass) {
   // llvm::errs() << "---------------------------------\n";
   string dotStr = "digraph anderson_ptg {\n";
-  dotStr += tabAndNewLine("graph [label=\"Anderson Pointer Analysis\",labelloc=t,fontsize=30]");
+  dotStr += tabAndNewLine("graph [label=\"Anderson Pointer Analysis\",labelloc=t,fontsize=20]");
 	dotStr += tabAndNewLine("node [color=blue]");
   for(unsigned i=0; i<graph.size(); i++) {
     if(graph[i].getPtsSet().empty()) continue;

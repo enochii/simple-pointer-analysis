@@ -1,5 +1,5 @@
 digraph unification_ptg {
-	graph [label="Steensgard Pointer Analysis",labelloc=t,fontsize=30];
+	graph [label="Steensgard Pointer Analysis",labelloc=t,fontsize=20];
 	node [color=blue];
 	"{f, }" -> "{p(obj), q(obj), }";
 	"{a.addr, }" -> "{a.addr(obj), b.addr(obj), c(obj), }";

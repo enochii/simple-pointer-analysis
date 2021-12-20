@@ -78,27 +78,20 @@ void SteensgardPTG::run(vector<PAConstraint> &constraints) {
   }
 
   for(auto &cons:constraints) {
-    switch (cons.getTy()) {
-    case PAConstraint::Load: {
+    if(PAConstraint::Load == cons.getTy()) {
       /// dest = *src
       auto srcPar = uset.find(cons.getSrc());
       auto &pstSrc = type[srcPar];
       assert(pstSrc.size() == 1 && "pts.size() should be 1");
       handleEqual(cons.getDest(), *pstSrc.begin());
-      break;
-    }
-    case PAConstraint::Store: {
+    } else if(PAConstraint::Store == cons.getTy()) {
         /// *dest = src
         // llvm::errs() << "*" << cons.getDest() << " <- " << cons.getSrc() << "\n";
         auto destPar = uset.find(cons.getDest());
         auto &pstDest = type[destPar];
         assert(pstDest.size() == 1 && "pts.size() should be 1");
         handleEqual(*pstDest.begin(), cons.getSrc());
-        break;
       }
-    default:
-      break;
-    }
   }
 }
 
@@ -126,7 +119,7 @@ void SteensgardPTG::dumpGraph(PAPass& pass) {
   auto unionClass = uset.getClasses();
   ofstream dotFile("output/ptg.dot");
   dotFile << "digraph unification_ptg {\n";
-  dotFile << tabAndNewLine("graph [label=\"Steensgard Pointer Analysis\",labelloc=t,fontsize=30]");
+  dotFile << tabAndNewLine("graph [label=\"Steensgard Pointer Analysis\",labelloc=t,fontsize=20]");
 	dotFile << tabAndNewLine("node [color=blue]");
 
   for(const auto& kv:unionClass) {

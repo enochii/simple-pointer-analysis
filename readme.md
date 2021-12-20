@@ -25,7 +25,7 @@ Hint: You may need to change the **hard-coded llvm path** in `CMakeList.txt`!
 
 the points-to-graph will output as a ".png" file if you have `graphviz` installed. The sample figure(steensgard with `test00.c`):
 
-<img src=./sample-output/ptg.png height=40% width=40%>
+<img src=./sample-output/ptg.png height=80% width=80%>
 
 other command line arguments:
 
